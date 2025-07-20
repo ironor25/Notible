@@ -1,0 +1,7 @@
+{
+    "extends":"@repo/typescript-config/base.json" ,//this is to use pre configuratiton from packages / ts config folder.
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    }
+}
