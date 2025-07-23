@@ -7,7 +7,7 @@ export function middleware(req : Request, res: Response , next : NextFunction ){
 
         if (decoded){
             //@ts-ignore : i need to do this soon.
-            req.uid = decoded.uid
+            req.userId = decoded.userId
             next();
         }
         else{
