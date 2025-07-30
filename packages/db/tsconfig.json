@@ -1,4 +1,9 @@
 
 {
     "extends":"@repo/typescript-config/base.json",
+     "compilerOptions": {
+    "module": "NodeNext", // must match moduleResolution: NodeNext
+    "target": "ESNext", // or "ES2020"
+    // ...other options
+     }
 }

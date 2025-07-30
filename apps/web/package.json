@@ -11,12 +11,23 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    
     "@repo/ui": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/jsonwebtoken": "^9.0.10",
+    "axios": "^1.11.0",
+    "jsonwebtoken": "^9.0.2",
     "next": "^15.3.0",
+    "next-auth": "^4.24.11",
+    "postcss": "^8.5.6",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/backend-common": "workspace:*",
+    "@repo/common": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",

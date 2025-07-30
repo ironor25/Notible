@@ -15,6 +15,7 @@ const users : User[] = [];
 function checkUser(token : string): string | null {
     try{
         const decoded = jwt.verify(token,JWT_SECRET)
+        console.log(decoded)
         if (typeof decoded == "string"){
             return null;
         }
@@ -25,7 +26,7 @@ function checkUser(token : string): string | null {
         return decoded.userId;
     }
     catch(e){
-
+        console.log(e)
         return null;;
     }
 
@@ -40,6 +41,7 @@ wss.on("connection",async function connection(ws,request) {
     }
     const queryParams = new URLSearchParams(url.split("?")[1]);
     const token = queryParams.get("token") || "";
+    console.log(token)
     const  userId = checkUser(token)
 
     if (!userId){
@@ -55,8 +57,21 @@ wss.on("connection",async function connection(ws,request) {
         const parseData = JSON.parse(data as unknown as string);
         if (parseData.type === "join_room"){
             const user = users.find(x => x.ws === ws)
+            const user_data = await prismaClient.room.findFirst({
+                where:{
+                    "id":Number(parseData.roomId)
+                }
+            })
+            if (user_data == null){
+                ws.send("room does not exist");
+            }
+            else{
+                 user?.rooms.push(parseData.roomId)
+                 ws.send("Room Joined successfully")
+            }
             //one should check first that room exist or not whom he wants to join
-            user?.rooms.push(parseData.roomId)
+            
+           
         }
 
         if (parseData.type == "leave_room"){
@@ -69,7 +84,7 @@ wss.on("connection",async function connection(ws,request) {
         }
 
         if (parseData.type === "chat"){
-            const roomId = parseData.roomId;
+            const roomId = Number(parseData.roomId);
             const message = parseData.message
             
             // this is dumb approach
@@ -86,7 +101,7 @@ wss.on("connection",async function connection(ws,request) {
             //then push it to db using pipeline.
             users.forEach(
                 user => {
-                    if (user.rooms.includes(roomId)){
+                    if (user.rooms.includes(roomId.toString())){
                         console.log("inside")
                         user.ws.send(JSON.stringify({
                             type:"chat",
