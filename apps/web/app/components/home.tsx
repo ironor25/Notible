@@ -1,15 +1,26 @@
 "use client"
 
-import { useState } from "react"
+
+import { useState ,useEffect} from "react"
+import { useRouter } from "next/navigation";
+import { StringifyOptions } from "querystring";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../context/features/sessionSlice";
+import { useSession } from "next-auth/react";
+
 
 export default function Home(){
+  const {data: session , status} = useSession()  
+  const token = session?.user
+  const router = useRouter()
   const [roomId, setroomId] = useState("");
+
  
-
-  function handleclick(type: string){
-
-        if (type== "join_room"){
-          
+  async function handleclick(type: string){
+        
+        if (type== "join_room"){           
+              router.push(`/room/${roomId}`)
+         
         }
         else{
           console.log("x")
@@ -27,7 +38,7 @@ export default function Home(){
     <button onClick={()=> {
      handleclick("join_room")
     }}
-    className="bg-amber-50 p-3 rounded-2xl cursor-pointer hover:bg-amber-200"
+    className="bg-amber-50 p-3 mb-4 rounded-2xl cursor-pointer hover:bg-amber-200"
     >Join room</button>
     <button onClick={()=> {
       handleclick("create-room")

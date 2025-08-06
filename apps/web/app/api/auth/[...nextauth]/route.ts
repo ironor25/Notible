@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken"
 import { prismaClient } from '@repo/db/client';
 export const authOptions: AuthOptions = {
   session: {
-    strategy: 'jwt' , // ✅ fixed: explicit type assertion
+    strategy: 'jwt' , 
   },
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -37,7 +37,7 @@ export const authOptions: AuthOptions = {
           email: user.email,
         },
         process.env.NEXTAUTH_SECRET!,
-        { expiresIn: "7d" }
+        { expiresIn: "1d" }
       );
 
       token.user = {

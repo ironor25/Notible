@@ -62,6 +62,7 @@ wss.on("connection",async function connection(ws,request) {
                     "id":Number(parseData.roomId)
                 }
             })
+            console.log()
             if (user_data == null){
                 ws.send("room does not exist");
             }
@@ -69,7 +70,7 @@ wss.on("connection",async function connection(ws,request) {
                  user?.rooms.push(parseData.roomId)
                  ws.send("Room Joined successfully")
             }
-            //one should check first that room exist or not whom he wants to join
+            //one should check first that room exist or not , whom he wants to join
             
            
         }
