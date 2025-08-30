@@ -16,8 +16,7 @@ export function ChatRoomClient({
   const [currentMessage, setCurrentMessage] = useState("");
 
   const token = session?.user?.token ?? null;
-    console.log( status === "authenticated" && token ? token : null)
-  
+   
   const { socket, loading: socketLoading } = useSocket(
     status === "authenticated" && token ? token : null
   );
@@ -40,9 +39,6 @@ export function ChatRoomClient({
       }
     };
 
-    return () => {
-      socket.close(); // Optional cleanup on unmount
-    };
   }, [socket, socketLoading, id, status]);
 
   // Session is still loading

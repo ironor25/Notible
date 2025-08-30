@@ -62,12 +62,11 @@ wss.on("connection",async function connection(ws,request) {
                     "id":Number(parseData.roomId)
                 }
             })
-            console.log()
             if (user_data == null){
                 ws.send("room does not exist");
             }
             else{
-                 user?.rooms.push(parseData.roomId)
+                 user?.rooms.push((parseData.roomId).toString())
                  ws.send("Room Joined successfully")
             }
             //one should check first that room exist or not , whom he wants to join
@@ -100,6 +99,9 @@ wss.on("connection",async function connection(ws,request) {
             //you can do this 
             //push it to a que
             //then push it to db using pipeline.
+            console.log(typeof roomId.toString(), typeof users[0]?.rooms[0])
+            console.log( users[0]?.rooms.includes(roomId.toString()))
+            console.log(users[0]?.rooms[0] === roomId.toString())
             users.forEach(
                 user => {
                     if (user.rooms.includes(roomId.toString())){
