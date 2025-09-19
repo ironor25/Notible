@@ -2,7 +2,8 @@ import NextAuth, { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import jwt from "jsonwebtoken"
 import { prismaClient } from '@repo/db/client';
-export const authOptions: AuthOptions = {
+
+const authOptions: AuthOptions = {
   session: {
     strategy: 'jwt' , 
   },
