@@ -10,11 +10,11 @@ async function getRoomId(slug:string) {
 
 
 export default  async function Room({params}:{
-    params :{
+    params : Promise<{
         slug :string
-    }
+    }>
 }){
-    const slug =  params.slug
+    const slug = (await params).slug
     console.log(slug)
     const roomId = await getRoomId(slug)
   
