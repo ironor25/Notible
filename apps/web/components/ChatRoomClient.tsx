@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSocket } from "../hooks/useSocket";
 import { useSession } from "next-auth/react";
 
+
+
 export function ChatRoomClient({
   messages,
   id,
@@ -15,7 +17,7 @@ export function ChatRoomClient({
   const [chats, setChats] = useState(messages);
   const [currentMessage, setCurrentMessage] = useState("");
 
-  const token = session?.user?.token ?? null;
+   const token = session?.user?.token ?? null;
    
   const { socket, loading: socketLoading } = useSocket(
     status === "authenticated" && token ? token : null
@@ -33,7 +35,9 @@ export function ChatRoomClient({
     );
 
     socket.onmessage = (event) => {
+      console.log(event.data)
       const parsedData = JSON.parse(event.data);
+      console.log(parsedData)
       if (parsedData.type === "chat") {
         setChats((prev) => [...prev, { message: parsedData.message }]);
       }
