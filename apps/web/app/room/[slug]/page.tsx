@@ -14,7 +14,8 @@ export default  async function Room({params}:{
         slug :string
     }
 }){
-    const slug = (await params).slug
+    const slug =  params.slug
+    console.log(slug)
     const roomId = await getRoomId(slug)
   
     if (roomId){

@@ -1,0 +1,26 @@
+name: Deploying Notible to GCP
+
+on:
+  push: 
+    branches: 
+      - main
+
+jobs:
+  deploy: 
+    runs-on: ubuntu-latest
+
+
+    steps: 
+      - name: Copy SSH key
+        run: |
+          echo "${{ secrets.SECRET_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: SSHing and  Pulling Repo
+        run: |
+        ssh -o StrictHostKeyChecking=no -i private_key.pem deepak@34.82.154.197 << 'EOF'
+          source ~/.bashsrc
+          cd Notible
+          git pull
+          sudo pnpm install
+        EOF
