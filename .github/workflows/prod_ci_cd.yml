@@ -18,9 +18,9 @@ jobs:
 
       - name: SSHing and  Pulling Repo
         run: |
-        ssh -o StrictHostKeyChecking=no -i private_key.pem deepak@34.82.154.197 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i private_key.pem deepak@34.82.154.197 << 'EOF'
           source ~/.bashsrc
           cd Notible
           git pull
           sudo pnpm install
-        EOF
+          EOF
