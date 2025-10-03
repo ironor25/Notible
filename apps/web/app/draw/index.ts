@@ -51,8 +51,7 @@ export async function initDraw(
 
   canvas.addEventListener("mouseup", (event) => {
     clicked = false;
-    console.log(event.clientX, event.clientY);
-
+   
     const width = event.clientX - startX;
     const height = event.clientY - startY;
     const shape: Shape = {
@@ -63,13 +62,13 @@ export async function initDraw(
       height: height,
     };
     existingShapes.push(shape);
-
+    // console.log("Sending shape once", shape);
     socket.send(
       JSON.stringify({
         type: "chat",
-        message: JSON.stringify({
-          shape,
-        }),
+        message: JSON.stringify(
+          shape
+        ),
         roomId
       })
     );
@@ -84,6 +83,8 @@ export async function initDraw(
       ctx.strokeRect(startX, startY, width, height);
     }
   });
+
+
 }
 
 function clearCanvas(
@@ -104,13 +105,12 @@ function clearCanvas(
 
 async function getExistingShapes(roomId: string) {
   const res = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
-
+  
   const messages = res.data.messages
-
   const shapes = messages.map((x: { message: string }) => {
     const messageData = JSON.parse(x.message);
+    
     return messageData;
   });
-
   return shapes;
 }

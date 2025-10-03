@@ -15,7 +15,6 @@ const users : User[] = [];
 function checkUser(token : string): string | null {
     try{
         const decoded = jwt.verify(token,JWT_SECRET)
-        console.log(decoded)
         if (typeof decoded == "string"){
             return null;
         }
@@ -54,7 +53,14 @@ wss.on("connection",async function connection(ws,request) {
 
 
     ws.on("message",async function message(data){
-        const parseData = JSON.parse(data as unknown as string);
+        let parseData : any;
+        if (typeof data !== "string"){
+            parseData = JSON.parse(data.toString())
+        }
+        else{
+            parseData= JSON.parse(data)
+        }
+        
         if (parseData.type === "join_room"){
             const user = users.find(x => x.ws === ws)
             const user_data = await prismaClient.room.findFirst({
@@ -86,10 +92,9 @@ wss.on("connection",async function connection(ws,request) {
         if (parseData.type === "chat"){
             const roomId = Number(parseData.roomId);
             const message = parseData.message
-            
             // this is dumb approach
             await prismaClient.chat.create({
-                data:{
+                data: {
                     roomId,
                     message,
                     userId
@@ -99,13 +104,11 @@ wss.on("connection",async function connection(ws,request) {
             //you can do this 
             //push it to a que
             //then push it to db using pipeline.
-            console.log(typeof roomId.toString(), typeof users[0]?.rooms[0])
-            console.log( users[0]?.rooms.includes(roomId.toString()))
-            console.log(users[0]?.rooms[0] === roomId.toString())
+      
             users.forEach(
                 user => {
                     if (user.rooms.includes(roomId.toString())){
-                        console.log("inside")
+            
                         user.ws.send(JSON.stringify({
                             type:"chat",
                             message : message,

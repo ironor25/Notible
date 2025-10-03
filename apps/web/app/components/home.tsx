@@ -4,7 +4,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-
+import axios from "axios"
+import { BACKEND_URL } from "../../config";
 
 export default function Home(){
   const {data: session , status} = useSession()  
@@ -14,9 +15,14 @@ export default function Home(){
 
  
   async function handleclick(type: string){
-        
-        if (type== "join_room"){           
-              router.push(`/room/${roomId}`)
+        console.log(roomId)
+        if (type== "join_room"){ 
+
+             const room = await axios.get(`${BACKEND_URL}/room/${roomId}`)
+             console.log(room)
+             if (room){
+               router.push(`/canvas/${room.data.id}`)
+             }
          
         }
         else{
