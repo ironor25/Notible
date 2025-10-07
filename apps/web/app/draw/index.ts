@@ -34,7 +34,6 @@ export class InitDraw {
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("canvas context not defined");
-
     this.canvas = canvas;
     this.roomId = roomId;
     this.socket = socket;
@@ -57,13 +56,18 @@ export class InitDraw {
 
   private async setupSocket() {
     this.socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-
-      if (message.type == "chat") {
-        const parsedShape = JSON.parse(message.message);
-        this.existingShapes.push(parsedShape);
-        this.clearCanvas();
-      }
+    let message: any;
+    try {
+      message = JSON.parse(event.data);
+    } catch {
+      console.warn("Non-JSON message from server:", event.data);
+      return; // 🔥 just ignore messages like "Room Joined"
+    }
+    if (message.type == "chat") {
+      const parsedShape = JSON.parse(message.message);
+      this.existingShapes.push(parsedShape);
+      this.clearCanvas();
+    }
     };
   }
 

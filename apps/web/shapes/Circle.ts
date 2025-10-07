@@ -11,9 +11,8 @@ export  class CircleShape extends ShapeClass{
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        console.log("draw circle");
-        console.log(this.stroke)
-         ctx.beginPath();
+        
+        ctx.beginPath();
         ctx.arc(this.x,this.y,this.radius,0,Math.PI*2)
         ctx.stroke()
         ctx.closePath()
