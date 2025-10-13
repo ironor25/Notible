@@ -2,6 +2,8 @@ import axios from "axios";
 import { BACKEND_URL } from "../../config";
 import { RectangleShape } from "../../shapes/Rectangle";
 import { CircleShape } from "../../shapes/Circle";
+import { LineShape } from "../../shapes/Line";
+import { PencilShape } from "../../shapes/Pencil";
 
 type Shape =
   | {
@@ -16,9 +18,22 @@ type Shape =
       centerX: number;
       centerY: number;
       radius: number;
-    };
+    }
+  |
+  {
+    type: "line";
+    cursorX: number;
+    cursorY: number;
+    x: number;
+    y: number;
+  }
+  |
+  {
+    type: "pencil";
+    strokehistory:[];
+  }
 
-export type ToolType = "circle" | "rect" | null;
+export type ToolType = "circle" | "rect" | "line" | "pencil" | null;
 
 export class InitDraw {
   private canvas: HTMLCanvasElement;
@@ -30,6 +45,8 @@ export class InitDraw {
   private startX = 0;
   private startY = 0;
   private current_tool: ToolType = "rect";
+  private points : {x:number,y:number}[] = []
+
 
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
     const ctx = canvas.getContext("2d");
@@ -61,7 +78,7 @@ export class InitDraw {
       message = JSON.parse(event.data);
     } catch {
       console.warn("Non-JSON message from server:", event.data);
-      return; // 🔥 just ignore messages like "Room Joined"
+      return;
     }
     if (message.type == "chat") {
       const parsedShape = JSON.parse(message.message);
@@ -105,6 +122,26 @@ export class InitDraw {
             radius: Math.abs(radius),
           };
           break;
+          
+        case "line":
+          shape = {
+            type:"line",
+            cursorX: this.startX,
+            cursorY: this.startY,
+            x: e.clientX,
+            y: e.clientY
+          }
+          break;
+        
+        case "pencil":
+          shape = {
+            type:"pencil",
+            strokehistory: this.points
+            
+          }
+          this.points = []
+
+          break
 
         default:
           return;
@@ -137,11 +174,19 @@ export class InitDraw {
         ).draw(this.ctx);
       } else if (this.current_tool == "circle") {
         const radius = Math.sqrt(width*width + height*height)/2
-
         const centerX = this.startX + width/2;
         const centerY = this.startY + height/2;
 
         new CircleShape(centerX, centerY, Math.abs(radius)).draw(this.ctx);
+      }
+      else if (this.current_tool == "line"){
+        new LineShape(this.startX,this.startY,e.clientX,e.clientY).draw(this.ctx)
+      }
+
+      else if (this.current_tool == "pencil"){
+        //@ts-ignore
+        this.points.push({x:e.clientX,y:e.clientY})
+        new PencilShape(this.startX,this.startY,this.points).draw(this.ctx)
       }
     };
     this.canvas.addEventListener("mousedown", mouseDownEvent);
@@ -169,6 +214,13 @@ export class InitDraw {
         new CircleShape(shape.centerX, shape.centerY, shape.radius).draw(
           this.ctx
         );
+      }
+      else if (shape.type == "line"){
+        new LineShape(shape.cursorX,shape.cursorY,shape.x,shape.y).draw(this.ctx)
+      }
+      else if (shape.type == "pencil"){
+        //@ts-ignore
+        new PencilShape(this.startX,this.startY ,shape.strokehistory).draw(this.ctx)
       }
     });
   }

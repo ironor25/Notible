@@ -12,5 +12,5 @@ export abstract class ShapeClass{
 
     }
 
-    abstract draw(ctx : CanvasRenderingContext2D): void
+    abstract draw(ctx : CanvasRenderingContext2D ): void
 }

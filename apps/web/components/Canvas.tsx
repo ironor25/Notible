@@ -45,12 +45,14 @@ function TopIconBar({selectedTool,setSelectedTool,draw}:
             <IconButton icon={<Pencil/>} 
             onClick={() => {
                 setSelectedTool("pencil")
-                // draw.setTool("pencil")
+                draw?.setTool("pencil")
 
             }} activated={selectedTool === "pencil"}/>
             <IconButton icon={<Slash/>} 
             onClick={() => {
-                setSelectedTool("line")}} 
+                setSelectedTool("line")
+                draw?.setTool("line")
+            }} 
                 activated={selectedTool === "line"}/>
             <IconButton icon={<RectangleHorizontalIcon/>} 
             onClick={() => {

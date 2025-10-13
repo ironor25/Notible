@@ -19,7 +19,6 @@ export default function Main() {
   if (status === "loading") {
     return <div>Loading...</div>;
   }
-
   if (!session) {
     return null; // optional, or return a loader
   }

@@ -2,14 +2,17 @@
 import { useEffect, useRef, useState } from "react";
 import { WS_URL } from "../config";
 import { Canvas } from "./Canvas";
+import { useSession } from "next-auth/react";
 
 export function RoomCanvas({roomId}:{roomId:string}
 ){
+    const { data: session, status } =  useSession();
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
 
   useEffect(()=>{
-      const ws = new WebSocket(`${WS_URL}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlOWFkOTIxMy02OTU1LTQ4OGEtOTYxNi0wYTEyY2RmYWUyNTYiLCJpYXQiOjE3NTg3OTAxMjV9.irZfZHzegLXY7CKpyojDth4VADNnf9DPi4rMtKvf8RQ`)
+      const ws = new WebSocket(`${WS_URL}?token=${session?.user.token}`)
+      console.log(session?.user.token)
       ws.onopen = () =>{
           setSocket(ws)
           ws.send(JSON.stringify({

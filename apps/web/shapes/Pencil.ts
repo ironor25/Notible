@@ -1,37 +1,46 @@
-import { Pencil } from "lucide-react";
 import { ShapeClass } from "./ShapeClass";
 
-export class PencilShape extends ShapeClass{
-    points : {x:number,y:number}[] = []
-    constructor (x : number, y: number, stroke?: string, fill?: string){
-        super(x,y)
-        this.addPoint(x,y)
-    }
-     addPoint(x: number, y: number) {
-        this.points.push({ x, y });
-    }
+export class PencilShape extends ShapeClass {
+  points: { x: number; y: number }[];
 
+  constructor(x: number, y: number, points: { x: number; y: number }[], stroke?: string, fill?: string) {
+    super(x, y, stroke, fill);
+    this.points = points;
+  }
 
-    draw(ctx: CanvasRenderingContext2D): void {
-        ctx.lineWidth = 2
-        if (this.points.length == 0) return;
-        
-        if (this.points.length < 2){
-            ctx.strokeStyle= this.stroke
-            const p = this.points[0]
-            ctx.beginPath()
-            ctx.arc(p?.x || 0,p?.y || 0,0,ctx.lineWidth,Math.PI*2)
-            ctx.stroke()
-        }
+  draw(ctx: CanvasRenderingContext2D): void {
+    if (this.points.length === 0) return;
 
-        ctx.strokeStyle = this.stroke
-        ctx.lineCap = "round"
-        ctx.lineJoin = "round"
-    
-        ctx.beginPath()
-        ctx.moveTo(this.x,this.y)
-    
-    
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = this.stroke;
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+
+    // 🟢 If only one point → draw a dot
+    if (this.points.length === 1) {
+      const p = this.points[0];
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+      ctx.fillStyle = this.stroke;
+      ctx.fill();
+      return;
     }
 
+    // 🟢 For multiple points → draw smooth quadratic curves
+    for (let i = 1; i < this.points.length - 1; i++) {
+      const curr = this.points[i];
+      const next = this.points[i + 1];
+      const xc = (curr.x + next.x ) / 2 ;
+      const yc = (curr.y + next.y) / 2  ;
+      ctx.quadraticCurveTo(curr.x, curr.y, xc, yc);
+    }
+
+    // Draw last segment
+    const last = this.points[this.points.length - 1];
+    ctx.lineTo(last.x, last.y);
+    ctx.stroke();
+  }
 }

@@ -25,8 +25,18 @@ export default function Home(){
              }
          
         }
-        else{
-          console.log("x")
+        else if (type == "create-room"){
+          const response  = await axios.post(`${BACKEND_URL}/create-room/`,{
+                                              "name":roomId
+                                            },
+                                            {"headers":{
+                                            "Authorization": `${session?.user.token}`,
+                                            "Content-Type": "application/json"
+                                            }})
+          if (response){
+            router.push(`/canvas/${response.data.roomId}`)
+          }
+        
         }
       }
   return (
