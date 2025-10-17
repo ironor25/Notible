@@ -8,19 +8,20 @@ export function RoomCanvas({roomId}:{roomId:string}
 ){
     const { data: session, status } =  useSession();
   const [socket, setSocket] = useState<WebSocket | null>(null);
+    // if (status == "loading" ){ return (<div>Loading Cnavas ....</div>) }
 
-
-  useEffect(()=>{
-      const ws = new WebSocket(`${WS_URL}?token=${session?.user.token}`)
-      console.log(session?.user.token)
-      ws.onopen = () =>{
-          setSocket(ws)
-          ws.send(JSON.stringify({
-            type:"join_room",
-            roomId
-          }))
-      }
-  },[])
+    useEffect(()=>{
+       if (status !== "authenticated" || !session?.user?.token) return;
+        const ws = new WebSocket(`${WS_URL}?token=${session?.user.token}`)
+        console.log(session?.user.token)
+        ws.onopen = () =>{
+            setSocket(ws)
+            ws.send(JSON.stringify({
+              type:"join_room",
+              roomId
+            }))
+        }
+    },[ status])
 
 
   if(!socket){

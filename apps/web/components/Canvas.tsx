@@ -13,12 +13,15 @@ export function Canvas({roomId,socket}:{roomId:string; socket: WebSocket;}) {
     
     useEffect(()=>{
         const canvas = canvasRef.current;
+        console.log(canvas)
         if (!canvas) return
+        console.log(socket.readyState)
         const draw = new InitDraw(canvas,roomId,socket);
+        console.log(socket.readyState)
         setCanvasManager(draw)
         return ()=> draw.cleanup()
         
-    },[canvasRef]);
+    },[canvasRef,roomId,socket]);
 
     return (
          <div style={{"overflow":"hidden"}}>

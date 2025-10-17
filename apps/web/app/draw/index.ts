@@ -36,6 +36,7 @@ type Shape =
 export type ToolType = "circle" | "rect" | "line" | "pencil" | null;
 
 export class InitDraw {
+  
   private canvas: HTMLCanvasElement;
   private roomId: string;
   private socket: WebSocket;
@@ -49,7 +50,9 @@ export class InitDraw {
 
 
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
+    console.log("InitDraw started")
     const ctx = canvas.getContext("2d");
+    console.log(ctx)
     if (!ctx) throw new Error("canvas context not defined");
     this.canvas = canvas;
     this.roomId = roomId;
@@ -69,6 +72,8 @@ export class InitDraw {
 
       return messageData;
     });
+
+    this.clearCanvas();
   }
 
   private async setupSocket() {
