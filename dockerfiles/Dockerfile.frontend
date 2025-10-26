@@ -1,0 +1,10 @@
+FROM oven/bun:1
+
+COPY . .
+
+WORKDIR 
+
+RUN bun install 
+
+
+

@@ -11,7 +11,6 @@ export class RectangleShape extends ShapeClass{
     }
     
     draw(ctx: CanvasRenderingContext2D): void {
-    
         ctx.strokeStyle = this.stroke;
         ctx.fillStyle = this.fill
         ctx.strokeRect(this.x,this.y,this.width,this.height);

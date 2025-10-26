@@ -4,6 +4,8 @@ import { RectangleShape } from "../../shapes/Rectangle";
 import { CircleShape } from "../../shapes/Circle";
 import { LineShape } from "../../shapes/Line";
 import { PencilShape } from "../../shapes/Pencil";
+import { Text } from "../../shapes/Text";
+import { AI_Draw } from "../../shapes/AI";
 
 type Shape =
   | {
@@ -32,8 +34,23 @@ type Shape =
     type: "pencil";
     strokehistory:[];
   }
+  |
+  {
+    type: "text";
+    text: "";
+    x:number;
+    y:number;
+  }
+  |
+  {
+    type: "AI"
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
 
-export type ToolType = "circle" | "rect" | "line" | "pencil" | null;
+export type ToolType = "circle" | "rect" | "line" | "pencil" | "text" | "AI" |null;
 
 export class InitDraw {
   
@@ -52,13 +69,12 @@ export class InitDraw {
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
     console.log("InitDraw started")
     const ctx = canvas.getContext("2d");
-    console.log(ctx)
     if (!ctx) throw new Error("canvas context not defined");
     this.canvas = canvas;
     this.roomId = roomId;
     this.socket = socket;
     this.ctx = ctx;
-
+    
     this.loadExistingShapes();
     this.setupSocket();
     this.handleEventListeners();
@@ -108,6 +124,7 @@ export class InitDraw {
       const height = e.clientY - this.startY;
       let shape: any;
       switch (this.current_tool) {
+
         case "rect":
           shape = {
             type: "rect",
@@ -148,9 +165,25 @@ export class InitDraw {
 
           break
 
+        case "text":
+          console.log("reached text")
+          new Text(this.startX,this.startY).draw(this.ctx)
+          shape = {
+            type:"text",
+            text: "",
+            x:this.startX,
+            y:this.startY
+          }
+
+        case "AI" : 
+          new AI_Draw(this.startX,this.startY,width,height).input()
+          
+
         default:
           return;
       }
+
+      
 
       this.existingShapes.push(shape);
       this.clearCanvas();
@@ -193,10 +226,20 @@ export class InitDraw {
         this.points.push({x:e.clientX,y:e.clientY})
         new PencilShape(this.startX,this.startY,this.points).draw(this.ctx)
       }
+      else if (this.current_tool ==  "AI"){
+        
+        new AI_Draw(
+          this.startX,
+          this.startY,
+          width,
+          height
+        ).draw(this.ctx);
+      }
     };
     this.canvas.addEventListener("mousedown", mouseDownEvent);
     this.canvas.addEventListener("mouseup", mouseUpEvent);
     this.canvas.addEventListener("mousemove", mouseMoveEvent);
+
 
     const cleanup = () => {
       this.canvas.removeEventListener("mousedown", mouseDownEvent);
@@ -212,21 +255,32 @@ export class InitDraw {
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.existingShapes.map((shape) => {
       if (shape.type == "rect") {
-        new RectangleShape(shape.x, shape.y, shape.width, shape.height).draw(
-          this.ctx
-        );
+        new RectangleShape(shape.x, shape.y, shape.width, shape.height).draw(this.ctx);
+
       } else if (shape.type == "circle") {
-        new CircleShape(shape.centerX, shape.centerY, shape.radius).draw(
-          this.ctx
-        );
+        new CircleShape(shape.centerX, shape.centerY, shape.radius).draw(this.ctx);
       }
+
       else if (shape.type == "line"){
         new LineShape(shape.cursorX,shape.cursorY,shape.x,shape.y).draw(this.ctx)
       }
+
       else if (shape.type == "pencil"){
         //@ts-ignore
         new PencilShape(this.startX,this.startY ,shape.strokehistory).draw(this.ctx)
       }
+
+      else if (shape.type == "text"){
+        //@ts-ignore
+        new PencilShape(this.startX,this.startY ,shape.strokehistory).draw(this.ctx)
+      }
+
+      else if (this.current_tool ==  "AI"){
+        
+        new AI_Draw(shape.x, shape.y, shape.width, shape.height).draw(this.ctx);
+      };
+      
+      
     });
   }
 
