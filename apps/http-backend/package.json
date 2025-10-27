@@ -9,6 +9,7 @@
     "dev": "npm run build && npm run start"
   },
   "dependencies": {
+    "@google/genai": "^1.27.0",
     "@repo/backend-common": "workspace:*",
     "@repo/common": "workspace:*",
     "@repo/db": "workspace:*",
