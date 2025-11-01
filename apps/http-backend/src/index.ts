@@ -4,12 +4,19 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
 import {CreateroomSchema, CreateUserSchema, SigninSchema} from "@repo/common/types"
 import { prismaClient } from "@repo/db/client";
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv"
 import cors from "cors"
+
+dotenv.config()
 const app = express()
 
 app.use(cors())
-
 app.use(express.json())
+        
+const  apiKey  = process.env.GEMINI_API_KEY; 
+console.log(apiKey)
+const genAI = new GoogleGenAI({apiKey});
 
 app.post("/signup",async (req,res)=>{
     const parsedData = CreateUserSchema.safeParse(req.body)
@@ -129,6 +136,19 @@ app.get("/room/:slug",async (req,res) => {
     res.json({
         id: room?.id
     })
+})
+
+
+app.post("/generate",async (req,res)=>{
+    const prompt  = req.body.prompt
+    const response = await genAI.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `${prompt}`,
+  });
+  res.json({
+    "result": response.text
+  })
+
 })
 
 

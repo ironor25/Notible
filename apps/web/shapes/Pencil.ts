@@ -19,7 +19,7 @@ export class PencilShape extends ShapeClass {
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
 
-    // 🟢 If only one point → draw a dot
+
     if (this.points.length === 1) {
       const p = this.points[0];
       ctx.beginPath();
@@ -29,7 +29,6 @@ export class PencilShape extends ShapeClass {
       return;
     }
 
-    // 🟢 For multiple points → draw smooth quadratic curves
     for (let i = 1; i < this.points.length - 1; i++) {
       const curr = this.points[i];
       const next = this.points[i + 1];

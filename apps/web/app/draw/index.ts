@@ -6,6 +6,7 @@ import { LineShape } from "../../shapes/Line";
 import { PencilShape } from "../../shapes/Pencil";
 import { Text } from "../../shapes/Text";
 import { AI_Draw } from "../../shapes/AI";
+import { log } from "console";
 
 type Shape =
   | {
@@ -50,7 +51,7 @@ type Shape =
     height: number;
   }
 
-export type ToolType = "circle" | "rect" | "line" | "pencil" | "text" | "AI" |null;
+export type ToolType = "circle" | "rect" | "line" | "pencil" | "text" | "AI" | "pan" |null;
 
 export class InitDraw {
   
@@ -64,6 +65,13 @@ export class InitDraw {
   private startY = 0;
   private current_tool: ToolType = "rect";
   private points : {x:number,y:number}[] = []
+  private scale = 1;
+  private offsetX = 0;
+  private offsetY = 0;
+  private isPanning = false;
+  private panStartX = 0;
+  private panStartY = 0;
+
 
 
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
@@ -78,6 +86,7 @@ export class InitDraw {
     this.loadExistingShapes();
     this.setupSocket();
     this.handleEventListeners();
+   
   }
 
   private async loadExistingShapes() {
@@ -109,20 +118,34 @@ export class InitDraw {
     };
   }
 
+  private getTransformedCoords(e: MouseEvent) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - this.offsetX) / this.scale;
+    const y = (e.clientY - rect.top - this.offsetY) / this.scale;
+    return { x, y };
+}
+
+
   private async handleEventListeners() {
     const mouseDownEvent = (e: MouseEvent) => {
       this.isDrawing = true;
-      this.startX = e.clientX;
-      this.startY = e.clientY;
+      const { x, y } = this.getTransformedCoords(e);
+    
+      this.startX = x;
+      this.startY = y;
+      
+
     };
 
     const mouseUpEvent = (e: MouseEvent) => {
+     
       if (!this.isDrawing) return;
       this.isDrawing = false;
 
-      const width = e.clientX - this.startX;
-      const height = e.clientY - this.startY;
-      let shape: any;
+      const { x, y } = this.getTransformedCoords(e);
+      const width = x - this.startX;
+      const height = y - this.startY;
+      let shape: any = {};
       switch (this.current_tool) {
 
         case "rect":
@@ -150,8 +173,8 @@ export class InitDraw {
             type:"line",
             cursorX: this.startX,
             cursorY: this.startY,
-            x: e.clientX,
-            y: e.clientY
+            x: x,
+            y: y
           }
           break;
         
@@ -176,14 +199,20 @@ export class InitDraw {
           }
 
         case "AI" : 
-          new AI_Draw(this.startX,this.startY,width,height).input()
+        // console.log(height,width)
+          if (width <= 100 && height <= 100){
+              alert("Draw area more that a regualr eraser")
+              break
+          }
+          new AI_Draw(this.startX,this.startY,width,height).input(this.ctx, this.socket,this.scale, this.offsetX, this.offsetY)
           
 
         default:
           return;
       }
 
-      
+
+
 
       this.existingShapes.push(shape);
       this.clearCanvas();
@@ -199,9 +228,10 @@ export class InitDraw {
 
     const mouseMoveEvent = (e: MouseEvent) => {
       if (!this.isDrawing) return;
-
-      const width = e.clientX - this.startX;
-      const height = e.clientY - this.startY;
+  
+      const { x, y } = this.getTransformedCoords(e);
+      const width = x - this.startX;
+      const height = y - this.startY;
       this.clearCanvas();
       if (this.current_tool == "rect") {
         new RectangleShape(
@@ -218,12 +248,12 @@ export class InitDraw {
         new CircleShape(centerX, centerY, Math.abs(radius)).draw(this.ctx);
       }
       else if (this.current_tool == "line"){
-        new LineShape(this.startX,this.startY,e.clientX,e.clientY).draw(this.ctx)
+        new LineShape(this.startX,this.startY,x,y).draw(this.ctx)
       }
 
       else if (this.current_tool == "pencil"){
         //@ts-ignore
-        this.points.push({x:e.clientX,y:e.clientY})
+        this.points.push({x:x,y:y})
         new PencilShape(this.startX,this.startY,this.points).draw(this.ctx)
       }
       else if (this.current_tool ==  "AI"){
@@ -236,9 +266,60 @@ export class InitDraw {
         ).draw(this.ctx);
       }
     };
+
+    const moveCanvasDown = (e : MouseEvent) => {
+        if (this.current_tool == "pan"){
+          this.isPanning = true
+          this.panStartX = e.clientX - this.offsetX
+          this.panStartY = e.clientY - this.offsetY
+        };
+      }
+      
+      const moveCanvasMove= (e: MouseEvent) =>{
+          if(!this.isPanning) return;
+          this.offsetX = e.clientX - this.panStartX;
+          this.offsetY = e.clientY - this.panStartY;
+          this.clearCanvas()
+      }
+      const panMouseUp = () => {
+          if (!this.isPanning) return
+          this.isPanning = false;
+      };
+      
+      const zoomHandler = (e: WheelEvent) =>{
+        if (!e.ctrlKey) return;
+          e.preventDefault();
+
+          const zoomIntensity = 0.001;
+          const delta = -e.deltaY * zoomIntensity;
+          const newScale = this.scale * (1 + delta);
+
+
+          const clampedScale = Math.min(Math.max(newScale, 0.3), 3);
+
+          const rect = this.canvas.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+
+
+          const worldX = (mouseX - this.offsetX) / this.scale;
+          const worldY = (mouseY - this.offsetY) / this.scale;
+
+       
+          this.offsetX = mouseX - worldX * clampedScale;
+          this.offsetY = mouseY - worldY * clampedScale;
+
+          this.scale = clampedScale;
+          this.clearCanvas();
+      }
+
     this.canvas.addEventListener("mousedown", mouseDownEvent);
     this.canvas.addEventListener("mouseup", mouseUpEvent);
     this.canvas.addEventListener("mousemove", mouseMoveEvent);
+    this.canvas.addEventListener("mousedown", moveCanvasDown);
+    this.canvas.addEventListener("mousemove", moveCanvasMove);
+    this.canvas.addEventListener("mouseup", panMouseUp);
+    this.canvas.addEventListener("wheel", zoomHandler);
 
 
     const cleanup = () => {
@@ -250,9 +331,15 @@ export class InitDraw {
   }
 
   private clearCanvas() {
+    
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = "rgba(0,0,0)";
+
+    this.ctx.fillStyle = "black";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.ctx.setTransform(this.scale, 0, 0, this.scale, this.offsetX, this.offsetY);
+    
     this.existingShapes.map((shape) => {
       if (shape.type == "rect") {
         new RectangleShape(shape.x, shape.y, shape.width, shape.height).draw(this.ctx);

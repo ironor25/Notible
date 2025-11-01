@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "./Icons";
-import {Brain, Circle, Pencil, RectangleHorizontalIcon, Slash, Type} from "lucide-react"
+import {Brain, Circle, Hand, Pencil, RectangleHorizontalIcon, Slash, Type} from "lucide-react"
 import { InitDraw } from "../app/draw"; 
 
-type Shape =  "circle"| "rect"| "pencil" | "line" | "text" | "AI"
+type Shape =  "circle"| "rect"| "pencil" | "line" | "text" | "AI" | "pan"
 
 export function Canvas({roomId,socket}:{roomId:string; socket: WebSocket;}) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -40,6 +40,12 @@ function TopIconBar({selectedTool,setSelectedTool,draw}:
 
     return (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex gap-2 overflow-hidden" >
+            <IconButton icon={<Hand/>} 
+            onClick={() => {
+                setSelectedTool("pan")
+                draw?.setTool("pan")
+
+            }} activated={selectedTool === "pencil"}/>
             <IconButton icon={<Pencil/>} 
             onClick={() => {
                 setSelectedTool("pencil")
