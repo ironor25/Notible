@@ -3,14 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { WS_URL } from "../config";
 import { Canvas } from "./Canvas";
 import { useSession } from "next-auth/react";
+import { store } from "../redux/store";
+import { setroomId, setSocket } from "../redux/appSlice";
+import { SwatchBookIcon } from "lucide-react";
 
 export function RoomCanvas({roomId}:{roomId:string}
 ){
     const { data: session, status } =  useSession();
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [socket, setSocket] = useState<WebSocket | null>(null);
     // if (status == "loading" ){ return (<div>Loading Cnavas ....</div>) }
-
-    useEffect(()=>{
+    store.dispatch(setroomId(roomId))
+      useEffect(()=>{
        if (status !== "authenticated" || !session?.user?.token) return;
         const ws = new WebSocket(`${WS_URL}?token=${session?.user.token}`)
         console.log(session?.user.token)
@@ -24,7 +27,7 @@ export function RoomCanvas({roomId}:{roomId:string}
     },[ status])
 
 
-  if(!socket){
+   if(!socket){
     return <div>
       Connecting to server...
     </div>
@@ -32,9 +35,8 @@ export function RoomCanvas({roomId}:{roomId:string}
 
   return (
     <div >
-      <Canvas roomId={roomId} socket={socket}/>
-     
-     
+  
+      <Canvas socket={socket}/>
       </div>
     
   );

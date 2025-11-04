@@ -6,7 +6,8 @@ import { LineShape } from "../../shapes/Line";
 import { PencilShape } from "../../shapes/Pencil";
 import { Text } from "../../shapes/Text";
 import { AI_Draw } from "../../shapes/AI";
-import { log } from "console";
+import { store } from "../../redux/store";
+import { addShapes, setSocket } from "../../redux/appSlice";
 
 type Shape =
   | {
@@ -27,8 +28,8 @@ type Shape =
     type: "line";
     cursorX: number;
     cursorY: number;
-    x: number;
-    y: number;
+    endX: number;
+    endY: number;
   }
   |
   {
@@ -49,10 +50,10 @@ type Shape =
     y: number;
     width: number;
     height: number;
+    shapes: [];
   }
 
 export type ToolType = "circle" | "rect" | "line" | "pencil" | "text" | "AI" | "pan" |null;
-
 export class InitDraw {
   
   private canvas: HTMLCanvasElement;
@@ -74,15 +75,15 @@ export class InitDraw {
 
 
 
-  constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
+  constructor(canvas: HTMLCanvasElement,socket:WebSocket) {
     console.log("InitDraw started")
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("canvas context not defined");
     this.canvas = canvas;
-    this.roomId = roomId;
-    this.socket = socket;
+   
+    this.roomId = store.getState().roomId;
+    this.socket = socket
     this.ctx = ctx;
-    
     this.loadExistingShapes();
     this.setupSocket();
     this.handleEventListeners();
@@ -92,16 +93,20 @@ export class InitDraw {
   private async loadExistingShapes() {
     const res = await axios.get(`${BACKEND_URL}/chats/${this.roomId}`);
     const messages = res.data.messages;
-    this.existingShapes = messages.map((x: { message: string }) => {
+    const fetch_shapes = messages.map((x: { message: string }) => {
       const messageData = JSON.parse(x.message);
 
       return messageData;
     });
+   fetch_shapes.forEach((shape: any) => store.dispatch(addShapes(shape)));
+   this.existingShapes = [...store.getState().shapes]
+
 
     this.clearCanvas();
   }
 
   private async setupSocket() {
+    if(!this.socket) return
     this.socket.onmessage = (event) => {
     let message: any;
     try {
@@ -140,6 +145,7 @@ export class InitDraw {
     const mouseUpEvent = (e: MouseEvent) => {
      
       if (!this.isDrawing) return;
+      if (!this.socket) return
       this.isDrawing = false;
 
       const { x, y } = this.getTransformedCoords(e);
@@ -173,8 +179,8 @@ export class InitDraw {
             type:"line",
             cursorX: this.startX,
             cursorY: this.startY,
-            x: x,
-            y: y
+            endX: x,
+            endY: y
           }
           break;
         
@@ -204,19 +210,18 @@ export class InitDraw {
               alert("Draw area more that a regualr eraser")
               break
           }
-          new AI_Draw(this.startX,this.startY,width,height).input(this.ctx, this.socket,this.scale, this.offsetX, this.offsetY)
+          new AI_Draw(this.startX,this.startY,width,height,this.socket).input(this.ctx,this.scale, this.offsetX, this.offsetY)
+          
           
 
         default:
           return;
       }
 
-
-
-
       this.existingShapes.push(shape);
+      store.dispatch(addShapes(shape))
       this.clearCanvas();
-
+      
       this.socket.send(
         JSON.stringify({
           type: "chat",
@@ -262,7 +267,8 @@ export class InitDraw {
           this.startX,
           this.startY,
           width,
-          height
+          height,
+          this.socket
         ).draw(this.ctx);
       }
     };
@@ -349,7 +355,7 @@ export class InitDraw {
       }
 
       else if (shape.type == "line"){
-        new LineShape(shape.cursorX,shape.cursorY,shape.x,shape.y).draw(this.ctx)
+        new LineShape(shape.cursorX,shape.cursorY,shape.endX,shape.endY).draw(this.ctx)
       }
 
       else if (shape.type == "pencil"){
@@ -362,9 +368,8 @@ export class InitDraw {
         new PencilShape(this.startX,this.startY ,shape.strokehistory).draw(this.ctx)
       }
 
-      else if (this.current_tool ==  "AI"){
-        
-        new AI_Draw(shape.x, shape.y, shape.width, shape.height).draw(this.ctx);
+      else if (shape.type ==  "AI"){
+        new AI_Draw(shape.x, shape.y, shape.width, shape.height,this.socket).parseAndDrawShapes(shape.shapes,this.ctx,false);
       };
       
       

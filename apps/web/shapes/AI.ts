@@ -7,15 +7,19 @@ import { BACKEND_URL } from "../config";
 import axios from "axios";
 import { prompt_generator } from "../app/prompts/constant";
 import { PencilShape } from "./Pencil";
+import { store } from "../redux/store";
+import { addShapes } from "../redux/appSlice";
 
 export class AI_Draw extends ShapeClass {
     width: number;
     height: number;
+    socket : WebSocket
 
-    constructor(x: number, y: number, width: number, height: number, stroke?: string, fill?: string) {
+    constructor(x: number, y: number, width: number, height: number,socket:WebSocket, stroke?: string, fill?: string) {
         super(x, y, stroke, fill);
         this.height = height;
         this.width = width;
+        this.socket =  socket
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
@@ -35,6 +39,10 @@ export class AI_Draw extends ShapeClass {
             if (!response) throw new Error(`Server error`);
             const data = await response.data
             console.log(data)
+            if(data.result[0] != "["){
+                const res = data.result.slice(data.result.indexOf("["),data.result.length -1)
+                return res
+            }
             return JSON.parse(data.result) || [];
         } catch (err) {
             console.error("Error fetching shapes:", err);
@@ -43,30 +51,69 @@ export class AI_Draw extends ShapeClass {
     }
 
 
-    parseAndDrawShapes(shapes: any[], ctx: CanvasRenderingContext2D) {
-        const instances = shapes.map(shape => {
-            switch (shape.tool) {
-                case "rectangle":
-                    return new RectangleShape(shape.x, shape.y, shape.width, shape.height, shape.stroke, shape.fill);
-                case "circle":
-                    return new CircleShape(shape.x, shape.y, shape.radius, shape.stroke, shape.fill);
-                case "line":
-                    return new LineShape(shape.startX, shape.startY, shape.endX, shape.endY, shape.stroke);
-                case "text":
-                    return new Text(shape.x, shape.y, shape.content, shape.color, shape.font);
-                case "pencil":
-                    return new PencilShape(this.x,this.y,shape.points,shape.stroke,shape.fill)
-                default:
-                    console.warn("Unknown shape type:", shape.tool);
-                    return null;
-            }
-        }).filter(Boolean);
+    parseAndDrawShapes(shapes: any[], ctx: CanvasRenderingContext2D, generated: boolean = true) {
+  for (const shape of shapes) {
+    switch (shape.type) {
+      case "rectangle": {
+        const rect = new RectangleShape(shape.x, shape.y, shape.width, shape.height, shape.stroke, shape.fill);
+        rect.draw(ctx);
+        store.dispatch(addShapes(shape));
+        if (generated) this.sendShape(shape);
+        break;
+      }
 
-        instances.forEach(shape => shape?.draw(ctx));
+      case "circle": {
+        const circle = new CircleShape(shape.x, shape.y, shape.radius, shape.stroke, shape.fill);
+        circle.draw(ctx);
+        store.dispatch(addShapes(shape));
+        if (generated) this.sendShape(shape);
+        break;
+      }
+
+      case "line": {
+        const line = new LineShape(shape.startX, shape.startY, shape.endX, shape.endY, shape.stroke);
+        line.draw(ctx);
+        store.dispatch(addShapes(shape));
+        if (generated) this.sendShape(shape);
+        break;
+      }
+
+      case "text": {
+        const text = new Text(shape.x, shape.y, shape.content, shape.color, shape.font);
+        text.draw(ctx);
+        store.dispatch(addShapes(shape));
+        if (generated) this.sendShape(shape);
+        break;
+      }
+
+      case "pencil": {
+        const pencil = new PencilShape(this.x, this.y, shape.points, shape.stroke, shape.fill);
+        pencil.draw(ctx);
+        store.dispatch(addShapes(shape));
+        if (generated) this.sendShape(shape);
+        break;
+      }
+
+      default:
+        console.warn("Unknown shape type:", shape.tool);
     }
+  }
+}
+
+// helper
+sendShape(shape: any) {
+
+  this.socket.send(
+    JSON.stringify({
+      type: "chat",
+      message: JSON.stringify(shape),
+      roomId: store.getState().roomId,
+    })
+  );
+}
 
 
-    input(ctx: CanvasRenderingContext2D, socket : WebSocket,scale: number, offsetX: number, offsetY: number) {
+    input(ctx: CanvasRenderingContext2D,scale: number, offsetX: number, offsetY: number) {
         const existing = document.getElementById("ai-input-wrapper");
         if (existing) existing.remove();
         const rect = ctx.canvas.getBoundingClientRect();
