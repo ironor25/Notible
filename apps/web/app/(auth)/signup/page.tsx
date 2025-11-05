@@ -41,16 +41,16 @@ export default function SignUpPage() {
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
-        background: "#f5f7fb",
+        background: "#1e293b",
       }}
     >
       <div
         style={{
           width: "100%",
           maxWidth: 420,
-          background: "#fff",
+          background: "#334155",
           borderRadius: 12,
-          boxShadow: "0 6px 20px rgba(16,24,40,0.08)",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.5)",
           padding: 28,
         }}
       >
@@ -71,11 +71,13 @@ export default function SignUpPage() {
           >
             N
           </div>
-          <h2 style={{ margin: 0, fontSize: 20 }}>Create an account</h2>
+          <h2 style={{ margin: 0, fontSize: 20, color: "#e2e8f0" }}>
+            Create an account
+          </h2>
           <p
             style={{
               margin: "8px 0 0",
-              color: "#6b7280",
+              color: "#94a3b8",
               fontSize: 13,
             }}
           >
@@ -88,7 +90,7 @@ export default function SignUpPage() {
             style={{
               display: "block",
               fontSize: 13,
-              color: "#374151",
+              color: "#e2e8f0",
               marginBottom: 6,
             }}
           >
@@ -105,7 +107,7 @@ export default function SignUpPage() {
               width: "100%",
               padding: "10px 12px",
               borderRadius: 8,
-              border: "1px solid #e6e9ef",
+              border: "1px solid #475569",
               fontSize: 14,
               outline: "none",
             }}
@@ -115,7 +117,7 @@ export default function SignUpPage() {
             style={{
               display: "block",
               fontSize: 13,
-              color: "#374151",
+              color: "#e2e8f0",
               marginBottom: 6,
             }}
           >
@@ -133,7 +135,7 @@ export default function SignUpPage() {
               width: "100%",
               padding: "10px 12px",
               borderRadius: 8,
-              border: "1px solid #e6e9ef",
+              border: "1px solid #475569",
               fontSize: 14,
               outline: "none",
             }}
@@ -143,7 +145,7 @@ export default function SignUpPage() {
             style={{
               display: "block",
               fontSize: 13,
-              color: "#374151",
+              color: "#e2e8f0",
               marginBottom: 6,
             }}
           >
@@ -162,7 +164,7 @@ export default function SignUpPage() {
               width: "100%",
               padding: "10px 12px",
               borderRadius: 8,
-              border: "1px solid #e6e9ef",
+              border: "1px solid #475569",
               fontSize: 14,
               outline: "none",
             }}
@@ -191,8 +193,8 @@ export default function SignUpPage() {
                 flex: 1,
                 padding: "10px 12px",
                 background: "transparent",
-                color: "#374151",
-                border: "1px solid #e6e9ef",
+                color: "#e2e8f0",
+                border: "1px solid #475569",
                 borderRadius: 8,
                 cursor: "pointer",
               }}
