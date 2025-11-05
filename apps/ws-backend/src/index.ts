@@ -2,7 +2,7 @@ import  {WebSocketServer , WebSocket} from "ws";
 import jwt, { decode, JwtPayload } from "jsonwebtoken"
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { prismaClient } from "@repo/db/client";
-const wss = new WebSocketServer({host:"0.0.0.0",port:8080})
+const wss = new WebSocketServer({ host: "127.0.0.1",port:8080})
 
 interface User{
     userId : string,

@@ -151,6 +151,6 @@ app.post("/generate",async (req,res)=>{
 })
 
 
-app.listen(3001,"0.0.0.0", ()=>{
+app.listen(3001,"127.0.0.1", ()=>{
     console.log("server started.")
 })
