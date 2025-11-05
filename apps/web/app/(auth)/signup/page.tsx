@@ -19,9 +19,7 @@ export default function SignUpPage() {
       email,
       password,
     });
-    console.log(res);
     if (res.data) {
-      console.log("inside");
       await signIn("credentials", {
         redirect: false,
         email,

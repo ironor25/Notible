@@ -15,7 +15,6 @@ app.use(cors())
 app.use(express.json())
         
 const  apiKey  = process.env.GEMINI_API_KEY; 
-console.log(apiKey)
 const genAI = new GoogleGenAI({apiKey});
 
 app.post("/signup",async (req,res)=>{

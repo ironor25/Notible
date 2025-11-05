@@ -12,10 +12,10 @@ export default function Home() {
   const [roomId, setroomId] = useState("");
 
   async function handleclick(type: string) {
-    console.log(roomId);
+
     if (type == "join_room") {
       const room = await axios.get(`${BACKEND_URL}/room/${roomId}`);
-      console.log(room);
+
       if (room) {
         router.push(`/canvas/${room.data.id}`);
       }

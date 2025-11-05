@@ -4,7 +4,7 @@ import { use } from "react";
 
 
 export async function POST(req: Request) {
-  // console.log(req.json())
+
     const {name, email , password} = await req.json()
     if (!email || !password||!name){
        return  NextResponse.json(

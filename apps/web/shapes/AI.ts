@@ -38,7 +38,7 @@ export class AI_Draw extends ShapeClass {
 
             if (!response) throw new Error(`Server error`);
             const data = await response.data
-            console.log(data)
+
             if(data.result[0] != "["){
                 const res = data.result.slice(data.result.indexOf("["),data.result.length -1)
                 return res
@@ -168,10 +168,10 @@ sendShape(shape: any) {
 
    
 
-            console.log("Generating shapes for prompt:", prompt);
+       
             try {
                 const shapes = await this.fetchShapes(prompt);
-                console.log(shapes)
+
                 wrapper.remove();
                 this.parseAndDrawShapes(shapes, ctx);
             } catch (err) {

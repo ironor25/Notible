@@ -76,7 +76,7 @@ export class InitDraw {
 
 
   constructor(canvas: HTMLCanvasElement,socket:WebSocket) {
-    console.log("InitDraw started")
+
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("canvas context not defined");
     this.canvas = canvas;
@@ -195,7 +195,7 @@ export class InitDraw {
           break
 
         case "text":
-          console.log("reached text")
+
           new Text(this.startX,this.startY).draw(this.ctx)
           shape = {
             type:"text",
@@ -205,7 +205,7 @@ export class InitDraw {
           }
 
         case "AI" : 
-        // console.log(height,width)
+ 
           if (width <= 100 && height <= 100){
               alert("Draw area more that a regualr eraser")
               break

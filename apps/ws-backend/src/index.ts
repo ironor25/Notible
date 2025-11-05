@@ -25,7 +25,7 @@ function checkUser(token : string): string | null {
         return decoded.userId;
     }
     catch(e){
-        console.log(e)
+   
         return null;;
     }
 
@@ -40,7 +40,7 @@ wss.on("connection",async function connection(ws,request) {
     }
     const queryParams = new URLSearchParams(url.split("?")[1]);
     const token = queryParams.get("token") || "";
-    console.log(token)
+
     const  userId = checkUser(token)
 
     if (!userId){

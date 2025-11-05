@@ -16,7 +16,7 @@ export function RoomCanvas({roomId}:{roomId:string}
       useEffect(()=>{
        if (status !== "authenticated" || !session?.user?.token) return;
         const ws = new WebSocket(`${WS_URL}?token=${session?.user.token}`)
-        console.log(session?.user.token)
+
         ws.onopen = () =>{
             setSocket(ws)
             ws.send(JSON.stringify({

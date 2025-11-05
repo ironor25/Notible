@@ -11,7 +11,7 @@ export class Text extends ShapeClass{
 
 
     draw(ctx: CanvasRenderingContext2D): void {
-        console.log("text triggere")
+
         let input = document.createElement("input")
         input.style.position = "fixed";
         input.style.left = `${this.x}px`;
@@ -24,7 +24,7 @@ export class Text extends ShapeClass{
         input.style.outline = "none";
         document.body.appendChild(input)
         input.focus()
-        console.log("input added")
+
 
         ctx.fillText(input.value,this.x,this.y)
         document.removeChild
