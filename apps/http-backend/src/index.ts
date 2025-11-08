@@ -45,7 +45,6 @@ app.post("/signup",async (req,res)=>{
 
 })
 
-
 app.post("/signin",async (req,res)=>{
     const parsedData = SigninSchema.safeParse(req.body)
     if (!parsedData.success){

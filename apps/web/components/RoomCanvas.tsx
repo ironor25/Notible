@@ -15,11 +15,11 @@ export function RoomCanvas({roomId}:{roomId:string}
     store.dispatch(setroomId(roomId))
       useEffect(()=>{
        if (status !== "authenticated" || !session?.user?.token) return;
-        const ws = new WebSocket(`${WS_URL}?token=${session?.user.token}`)
+        const wss = new WebSocket(`${WS_URL}?token=${session?.user.token}`)
 
-        ws.onopen = () =>{
-            setSocket(ws)
-            ws.send(JSON.stringify({
+        wss.onopen = () =>{
+            setSocket(wss)
+            wss.send(JSON.stringify({
               type:"join_room",
               roomId
             }))

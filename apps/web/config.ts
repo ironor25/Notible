@@ -1,2 +1,5 @@
-export const BACKEND_URL = "http://notible.work.gd/api";
-export const WS_URL = "ws://notible.work.gd/ws";
+export const BACKEND_URL = "https://notible.work.gd/backend/";
+export const WS_URL = "wss://notible.work.gd/ws/";
+
+
+

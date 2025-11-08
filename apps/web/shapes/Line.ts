@@ -1,4 +1,3 @@
-import { execArgv } from "process";
 import { ShapeClass } from "./ShapeClass";
 
 export class LineShape extends ShapeClass{
