@@ -368,11 +368,6 @@ export class InitDraw {
         new PencilShape(this.startX,this.startY ,shape.strokehistory).draw(this.ctx)
       }
 
-      else if (shape.type ==  "AI"){
-        new AI_Draw(shape.x, shape.y, shape.width, shape.height,this.socket).parseAndDrawShapes(shape.shapes,this.ctx,false);
-      };
-      
-      
     });
   }
 

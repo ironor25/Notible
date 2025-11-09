@@ -1,3 +1,4 @@
+import { PassThrough } from "stream";
 import { ShapeClass } from "./ShapeClass";
 
 export class PencilShape extends ShapeClass {
@@ -9,7 +10,10 @@ export class PencilShape extends ShapeClass {
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
-    if (this.points.length === 0) return;
+    if (!Array.isArray(this.points) || this.points.length === 0) {
+    return;
+}
+
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
