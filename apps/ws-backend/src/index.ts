@@ -1,8 +1,8 @@
 import  {WebSocketServer , WebSocket} from "ws";
 import jwt, { decode, JwtPayload } from "jsonwebtoken"
-import { JWT_SECRET } from "@repo/backend-common/config";
+// import { JWT_SECRET } from "@repo/backend-common/config";
 import { prismaClient } from "@repo/db/client";
-const wss = new WebSocketServer({ host: "127.0.0.1",port:8080})
+import dotenv from "dotenv"
 
 interface User{
     userId : string,
@@ -10,23 +10,36 @@ interface User{
     ws : WebSocket
 }
 
+dotenv.config()
+
+const wss = new WebSocketServer({ host: "127.0.0.1",port:8080})
+const JWT_SECRET = process.env.JWT_SECRET
+
 const users : User[] = [];
 
 function checkUser(token : string): string | null {
+    // ensure JWT_SECRET is present and typed as a string so jwt.verify's signature is satisfied
+    if (typeof JWT_SECRET !== "string" || JWT_SECRET.length === 0) {
+        console.error("JWT_SECRET is not configured");
+        return null;
+    }
+
     try{
-        const decoded = jwt.verify(token,JWT_SECRET)
+        const decoded = jwt.verify(token, JWT_SECRET)
         if (typeof decoded == "string"){
             return null;
         }
-        if (!decoded || !decoded.userId){
+        // decoded is JwtPayload here
+        const payload = decoded as JwtPayload;
+        if (!payload || !payload.userId){
             wss.close();
             return null;
         }
-        return decoded.userId;
+        return payload.userId as string;
     }
     catch(e){
    
-        return null;;
+        return null;
     }
 
 }
@@ -42,7 +55,7 @@ wss.on("connection",async function connection(ws,request) {
     const token = queryParams.get("token") || "";
 
     const  userId = checkUser(token)
-
+    console.log(userId)
     if (!userId){
 
         ws.close();
