@@ -4,30 +4,39 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { BACKEND_URL } from "../../config";
-
+import { setToken } from "../../redux/appSlice";
+import { store } from "../../redux/store";
 export default function Home() {
   const { data: session, status } = useSession();
-  const token = session?.user;
+  store.dispatch(setToken(session?.user.token))
   const router = useRouter();
   const [roomId, setroomId] = useState("");
 
   async function handleclick(type: string) {
 
     if (type == "join_room") {
-      const room = await axios.get(`${BACKEND_URL}/room/${roomId}`);
+      const room = await axios.get(`${BACKEND_URL}/room/${roomId}`,
+         {
+          headers: {
+            Authorization: `Bearer ${store.getState().token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (room) {
         router.push(`/canvas/${room.data.id}`);
       }
+
     } else if (type == "create-room") {
       const response = await axios.post(
-        `${BACKEND_URL}/create-room/`,
+        `${BACKEND_URL}/room/create-room/`,
         {
           name: roomId,
         },
         {
           headers: {
-            Authorization: `${session?.user.token}`,
+            Authorization: `Bearer ${store.getState().token}`,
             "Content-Type": "application/json",
           },
         }

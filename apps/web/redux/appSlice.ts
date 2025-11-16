@@ -5,7 +5,8 @@ const appSlice = createSlice({
   initialState: {
     socket: null,    
     shapes: [],  
-    roomId: ""
+    roomId: "",
+    token: "",
   },
   reducers: {
     setSocket: (state, action) => {
@@ -17,10 +18,13 @@ const appSlice = createSlice({
     },
     setroomId:(state,action)=>{
       state.roomId = action.payload
+    },
+    setToken: (state,action) =>{
+      state.token = action.payload
     }
    
   },
 });
 
-export const { setSocket, addShapes,setroomId} = appSlice.actions;
+export const { setSocket, addShapes,setroomId,setToken} = appSlice.actions;
 export default appSlice.reducer;

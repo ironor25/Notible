@@ -30,11 +30,18 @@ export class AI_Draw extends ShapeClass {
 
 
     async fetchShapes(prompt: string) {
+      console.log(store.getState().token)
         try {
-            const response = await axios.post(`${BACKEND_URL}/generate`, {
+            const response = await axios.post(`${BACKEND_URL}/generate/`, {
                 "prompt": prompt_generator(prompt) + `Bounds : x=${this.x} ,y=${this.y} , width = ${this.width} , height=${this.height}`
 
-            });
+            },
+          {
+          headers: {
+            Authorization: `Bearer ${store.getState().token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
             if (!response) throw new Error(`Server error`);
             const data = await response.data

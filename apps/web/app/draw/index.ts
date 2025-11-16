@@ -7,7 +7,7 @@ import { PencilShape } from "../../shapes/Pencil";
 import { Text } from "../../shapes/Text";
 import { AI_Draw } from "../../shapes/AI";
 import { store } from "../../redux/store";
-import { addShapes, setSocket } from "../../redux/appSlice";
+import { addShapes } from "../../redux/appSlice";
 
 type Shape =
   | {
@@ -91,7 +91,13 @@ export class InitDraw {
   }
 
   private async loadExistingShapes() {
-    const res = await axios.get(`${BACKEND_URL}/chats/${this.roomId}`);
+
+    const res = await axios.get(`${BACKEND_URL}/chats/${this.roomId}` ,{
+          headers: {
+            Authorization: `Bearer ${store.getState().token}`,
+            "Content-Type": "application/json",
+          },
+        });
     const messages = res.data.messages;
     const fetch_shapes = messages.map((x: { message: string }) => {
       const messageData = JSON.parse(x.message);
@@ -187,7 +193,7 @@ export class InitDraw {
         case "pencil":
           shape = {
             type:"pencil",
-            strokehistory: this.points
+            points: this.points
             
           }
           this.points = []
@@ -360,7 +366,7 @@ export class InitDraw {
 
       else if (shape.type == "pencil"){
         //@ts-ignore
-        new PencilShape(this.startX,this.startY ,shape.strokehistory).draw(this.ctx)
+        new PencilShape(this.startX,this.startY ,shape.points).draw(this.ctx)
       }
 
       else if (shape.type == "text"){

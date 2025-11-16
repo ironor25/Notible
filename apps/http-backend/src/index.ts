@@ -1,155 +1,69 @@
 import express from "express";
-import jwt from "jsonwebtoken"
-import { JWT_SECRET } from "@repo/backend-common/config";
-import { middleware } from "./middleware";
-import {CreateroomSchema, CreateUserSchema, SigninSchema} from "@repo/common/types"
-import { prismaClient } from "@repo/db/client";
-import { GoogleGenAI } from "@google/genai";
-import dotenv from "dotenv"
-import cors from "cors"
+import dotenv from "dotenv";
+import helmet from "helmet";
+import cors from "cors";
+import morgan from "morgan";
+import rateLimit from "express-rate-limit";
 
-dotenv.config()
-const app = express()
+import auth_router from "./routes/auth.js";
+import room_router from "./routes/room.js";
+import chats_router from "./routes/chats.js";
+import generate_router from "./routes/generate.js";
+import { authMiddleware } from "./middleware/auth.js";
 
-app.use(cors())
-app.use(express.json())
-        
-const  apiKey  = process.env.GEMINI_API_KEY; 
-const genAI = new GoogleGenAI({apiKey});
+dotenv.config();
 
-app.post("/signup",async (req,res)=>{
-    const parsedData = CreateUserSchema.safeParse(req.body)
-    if (!parsedData.success){
-        return res.json({
-            message : "Incorrect inputs"
-        })
-    }
+const app = express();
 
-    try{
-    const user = await prismaClient.user.create({
-        data:{
-            email : parsedData.data?.username,
-            password : parsedData.data.password,
-            name : parsedData.data.name,
-        }
-        
-    })
-    res.json({
-        uid: user.id
-    })}
-    catch{
-        res.status(411).json({
-            message :"user already exist."
-        })
-    }
+// Basic hardening
+app.use(helmet());
+app.use(express.json());
 
-})
+// Logging
+app.use(morgan("common"));
 
-app.post("/signin",async (req,res)=>{
-    const parsedData = SigninSchema.safeParse(req.body)
-    if (!parsedData.success){
-        res.json({
-            message : "Incorrect inputs"
-        })
-        return;
-    }
+// CORS: restrict in production via env ALLOWED_ORIGINS (comma separated)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:3000")
+  .split(",")
+  .map(s => s.trim());
+app.use(cors({
+  origin: (origin, cb) => {
+    // allow no-origin (curl / server-to-server)
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("CORS policy: origin not allowed"));
+  }
+}));
 
-    //toddo xompare hash password
-    const user = await prismaClient.user.findFirst({
-        where:{
-            "email":parsedData.data.username,
-            "password": parsedData.data.password
-        }
-    })
+// global rate limiter
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, 
+  max: 300, 
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use(globalLimiter);
 
-    if (!user){
-        res.status(403).json({
-            message : "Not Authorized."
-        })
-        return;
-    }
-    const token =  jwt.sign({
-        userId : user?.id
-     },JWT_SECRET);
+// Routes
+app.use("/api/auth", auth_router); // signup, signin
 
-     res.json({
-        token
-     })
-    
-})
+app.use("/api/room", authMiddleware,room_router);
+app.use("/api/chats", authMiddleware, chats_router);
+app.use("/api/generate", authMiddleware,generate_router);
 
+// Health
+app.get("/health", (req, res) => res.json({ ok: true }));
 
-app.post("/create-room", middleware,async (req,res)=>{
-    const parsedData = CreateroomSchema.safeParse(req.body)
-    if (!parsedData.success){
-        res.json({
-            message : "incorrect inputs"
-        })
-        return
-    }
-    //@ts-ignore
-    const userId = req.userId
-    //db call
-    try{
-        const room = await prismaClient.room.create({
-        data:{
-            slug:parsedData.data.name,
-            adminId:userId
-        }
-    })
-    res.json({
-        roomId: room.id
-    })}
-    catch(e){
-        res.status(411).json({
-            message:"room already exist."
-        })
-    }
-})
+// Error handler
+//@ts-ignore
+app.use((err, req, res, next) => {
+  console.error(err);
+  if (err.name === "UnauthorizedError") {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+  res.status(err.status || 500).json({ message: err.message || "Server error" });
+});
 
-app.get("/chats/:roomId",async (req,res) => {
-    const roomId = Number(req.params.roomId);
-    const messages = await prismaClient.chat.findMany({
-        where:{
-            roomId: roomId
-        },
-        orderBy :{
-            "id": "desc"
-        } ,
-        take  : 50
-    })
-    res.json({
-        messages
-    })
-})
-
-app.get("/room/:slug",async (req,res) => {
-    const slug = (req.params.slug);
-    const room = await prismaClient.room.findFirst({
-        where:{
-            "slug":slug
-        }
-    })
-
-    res.json({
-        id: room?.id
-    })
-})
-
-
-app.post("/generate",async (req,res)=>{
-    const prompt  = req.body.prompt
-    const response = await genAI.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `${prompt}`,
-  });
-  res.json({
-    "result": response.text
-  })
-
-})
-
-
-app.listen(3001,"127.0.0.1", ()=>{
-    console.log("server started.")
-})
+const HOST = process.env.BIND_ADDRESS || "127.0.0.1";
+const PORT = Number(process.env.PORT || 3001);
+app.listen(PORT, HOST, () => console.log(`Server listening on ${HOST}:${PORT}`));

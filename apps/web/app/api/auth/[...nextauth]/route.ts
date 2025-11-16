@@ -32,6 +32,7 @@ const authOptions: AuthOptions = {
    jwt: async ({ token, user }) => {
   if (user) {
     try {
+      console.log(user.id)
       const realJWT = jwt.sign(
         {
           userId: user.id,

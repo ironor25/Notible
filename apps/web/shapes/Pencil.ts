@@ -9,17 +9,14 @@ export class PencilShape extends ShapeClass {
     this.points = points;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
-    if (!Array.isArray(this.points) || this.points.length === 0) {
-    return;
-}
-
+draw(ctx: CanvasRenderingContext2D): void {
+  
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = this.stroke;
     ctx.lineWidth = 2;
-
+   
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
 
@@ -36,6 +33,7 @@ export class PencilShape extends ShapeClass {
     for (let i = 1; i < this.points.length - 1; i++) {
       const curr = this.points[i];
       const next = this.points[i + 1];
+      
       const xc = (curr.x + next.x ) / 2 ;
       const yc = (curr.y + next.y) / 2  ;
       ctx.quadraticCurveTo(curr.x, curr.y, xc, yc);
