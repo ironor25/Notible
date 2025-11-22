@@ -1,11 +1,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "./Icons";
-import {Brain, Circle, Hand, Pencil, RectangleHorizontalIcon, Slash, Type} from "lucide-react"
+import {Brain, Circle, Eraser, Hand, Pencil, RectangleHorizontalIcon, Slash, Type} from "lucide-react"
 import { InitDraw } from "../app/draw"; 
 import { store } from "../redux/store";
 
-type Shape =  "circle"| "rect"| "pencil" | "line" | "text" | "AI" | "pan"
+type Shape =  "circle"| "rect"| "pencil" | "line" | "text" | "AI" | "pan" | "eraser"
 
 export function Canvas({socket}:{ socket: WebSocket;}) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -88,6 +88,13 @@ function TopIconBar({selectedTool,setSelectedTool,draw}:
                 draw?.setTool("AI")
             }} 
                 activated={selectedTool === "AI"}/>
+
+            <IconButton icon={<Eraser/>} 
+            onClick={() => {
+                setSelectedTool("eraser")
+                draw?.setTool("eraser")
+            }} 
+                activated={selectedTool === "eraser"}/>
         </div>
     )
 }

@@ -8,20 +8,24 @@ import { Text } from "../../shapes/Text";
 import { AI_Draw } from "../../shapes/AI";
 import { store } from "../../redux/store";
 import { addShapes } from "../../redux/appSlice";
+import { log } from "console";
+import { prismaClient } from "@repo/db/client";
 
 type Shape =
-  | {
+  {
       type: "rect";
       x: number;
       y: number;
       width: number;
       height: number;
+      id: number;
     }
   | {
       type: "circle";
       centerX: number;
       centerY: number;
       radius: number;
+       id: number;
     }
   |
   {
@@ -30,11 +34,13 @@ type Shape =
     cursorY: number;
     endX: number;
     endY: number;
+     id: number;
   }
   |
   {
     type: "pencil";
-    strokehistory:[];
+    points:{x:number,y:number}[];
+     id: number;
   }
   |
   {
@@ -42,6 +48,7 @@ type Shape =
     text: "";
     x:number;
     y:number;
+     id: number;
   }
   |
   {
@@ -51,9 +58,10 @@ type Shape =
     width: number;
     height: number;
     shapes: [];
+     id: number;
   }
 
-export type ToolType = "circle" | "rect" | "line" | "pencil" | "text" | "AI" | "pan" |null;
+export type ToolType = "circle" | "rect" | "line" | "pencil" | "text" | "AI" | "pan" | "eraser" |null;
 export class InitDraw {
   
   private canvas: HTMLCanvasElement;
@@ -99,11 +107,17 @@ export class InitDraw {
           },
         });
     const messages = res.data.messages;
-    const fetch_shapes = messages.map((x: { message: string }) => {
-      const messageData = JSON.parse(x.message);
+    const fetch_shapes = messages.map((x: any) => {
 
-      return messageData;
+      const messageData = JSON.parse(x.message);
+    
+      
+      return {
+        ...messageData,
+        "id": x.id
+      }
     });
+
    fetch_shapes.forEach((shape: any) => store.dispatch(addShapes(shape)));
    this.existingShapes = [...store.getState().shapes]
 
@@ -124,6 +138,18 @@ export class InitDraw {
     if (message.type == "chat") {
       const parsedShape = JSON.parse(message.message);
       this.existingShapes.push(parsedShape);
+      this.clearCanvas();
+    }
+    
+    if (message.type === "shape_deleted") {
+      const deletedId = message.id;
+
+      // Remove shape locally
+      this.existingShapes = this.existingShapes.filter(
+        (shape) => shape.id !== deletedId
+      );
+
+      // Redraw without deleted shape
       this.clearCanvas();
     }
     };
@@ -157,7 +183,107 @@ export class InitDraw {
       const { x, y } = this.getTransformedCoords(e);
       const width = x - this.startX;
       const height = y - this.startY;
-      let shape: any = {};
+      let shape: any ={} ;
+
+      if (this.current_tool === "eraser") {
+          const eraserSize = 5;
+
+          let erased = false;
+          let erasedId = null;
+
+          this.existingShapes = this.existingShapes.filter((shape) => {
+            let hit = false;
+
+            if (shape.type === "rect") {
+              const onLeftEdge =
+                Math.abs(x - shape.x) <= eraserSize &&
+                y >= shape.y &&
+                y <= shape.y + shape.height;
+
+              const onRightEdge =
+                Math.abs(x - (shape.x + shape.width)) <= eraserSize &&
+                y >= shape.y &&
+                y <= shape.y + shape.height;
+
+              const onTopEdge =
+                Math.abs(y - shape.y) <= eraserSize &&
+                x >= shape.x &&
+                x <= shape.x + shape.width;
+
+              const onBottomEdge =
+                Math.abs(y - (shape.y + shape.height)) <= eraserSize &&
+                x >= shape.x &&
+                x <= shape.x + shape.width;
+
+              hit = onLeftEdge || onRightEdge || onTopEdge || onBottomEdge;
+            }
+
+
+            else if (shape.type === "circle") {
+              const dx = x - shape.centerX;
+              const dy = y - shape.centerY;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              hit = Math.abs(distance - shape.radius) <= eraserSize;
+            }
+
+
+            else if (shape.type === "line") {
+              const distance =
+                Math.abs(
+                  (shape.endY - shape.cursorY) * x -
+                    (shape.endX - shape.cursorX) * y +
+                    shape.endX * shape.cursorY -
+                    shape.endY * shape.cursorX
+                ) /
+                Math.sqrt(
+                  (shape.endY - shape.cursorY) ** 2 +
+                    (shape.endX - shape.cursorX) ** 2
+                );
+
+              hit = distance <= eraserSize;
+            }
+
+
+            else if (shape.type === "pencil") {
+              hit = shape.points.some((point) => {
+                const dx = x - point.x;
+                const dy = y - point.y;
+                return Math.sqrt(dx * dx + dy * dy) <= eraserSize;
+              });
+            }
+       
+
+            if (hit) {
+              erased = true;
+              erasedId = shape.id;
+              return false; // remove shape
+            }
+
+            return true; // keep shape
+          });
+
+          // -------------------------
+          // Send delete event if needed
+          // -------------------------\
+          console.log(erased,erasedId)
+          if (erased && erasedId !== null) {
+            
+            this.socket.send(
+              JSON.stringify({
+                type: "delete_shape",
+                id: erasedId,
+                roomId: this.roomId,
+              })
+            );
+          }
+
+          this.clearCanvas();
+          return;
+        }
+
+
+
       switch (this.current_tool) {
 
         case "rect":

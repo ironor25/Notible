@@ -101,7 +101,37 @@ wss.on("connection",async function connection(ws,request) {
             user.rooms = user?.rooms.filter(x => x === parseData.room);
              
         }
+        
+        if (parseData.type === "delete_shape") {
+                const shapeId = Number(parseData.id);
+                const roomId = Number(parseData.roomId);
 
+                try {
+                    await prismaClient.chat.delete({
+                        where: { id: shapeId }
+                    });
+
+                    // SEND TO ALL USERS IN THE SAME ROOM
+                    users.forEach(user => {
+                        if (user.rooms.includes(roomId.toString())) {
+                            user.ws.send(JSON.stringify({
+                                type: "shape_deleted",
+                                id: shapeId,
+                                roomId
+                            }));
+                        }
+                    });
+
+                } catch (err : any) {
+                    console.error("Error deleting shape:", err);
+                    ws.send(JSON.stringify({
+                        type: "delete_error",
+                        error: err.message
+                    }));
+                }
+
+                return; 
+            }
         if (parseData.type === "chat"){
             const roomId = Number(parseData.roomId);
             const message = parseData.message
@@ -113,6 +143,7 @@ wss.on("connection",async function connection(ws,request) {
                     userId
                 }
             })
+
 
             //you can do this 
             //push it to a que
